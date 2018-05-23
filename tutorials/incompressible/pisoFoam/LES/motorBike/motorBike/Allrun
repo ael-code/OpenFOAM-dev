@@ -1,25 +1,40 @@
 #!/bin/sh
 cd ${0%/*} || exit 1    # Run from this directory
 
+FOAM_CASE=/tmp/mountdir/motorBike #`readlink -f .` #/tmp/mountdir/motorBike
+FOAM_LOGS=$HOME/foam/motorbike_adafs/logs
+
+set -e
+
+echo "Creating logs dir: ${FOAM_LOGS}"
+rm -rf ${FOAM_LOGS} && mkdir ${FOAM_LOGS}
+
+echo "Creating directory: '${FOAM_CASE}'"
+rm -rf ${FOAM_CASE} && mkdir ${FOAM_CASE}
+
+
+echo "Copying case files: '${FOAM_CASE}'"
+${CPR:?} ./ ${FOAM_CASE}/
+
 # Source tutorial run functions
 . $WM_PROJECT_DIR/bin/tools/RunFunctions
 
 # copy motorbike surface from resources directory
-cp $FOAM_TUTORIALS/resources/geometry/motorBike.obj.gz constant/triSurface/
+cp $FOAM_TUTORIALS/resources/geometry/motorBike.obj.gz ${FOAM_CASE}/constant/triSurface/
 
 runApplication blockMesh
-cp system/decomposeParDict.hierarchical system/decomposeParDict
+cp system/decomposeParDict.hierarchical ${FOAM_CASE}/system/decomposeParDict
 runApplication decomposePar -copyZero
 
-cp system/decomposeParDict.ptscotch system/decomposeParDict
-runParallel snappyHexMesh -overwrite
+cp system/decomposeParDict.ptscotch ${FOAM_CASE}/system/decomposeParDict
+runApplication snappyHexMesh -overwrite # PARALLEL
 
-find . -type f -iname "*level*" -exec rm {} \;
+find ${FOAM_CASE} -type f -iname "*level*" -exec rm {} \;
 
-runParallel renumberMesh -overwrite
+runApplication renumberMesh -overwrite # PARALLEL
 
-runParallel potentialFoam -initialiseUBCs
+runApplication potentialFoam -initialiseUBCs # PARALLEL
 
-runParallel `getApplication`
+runApplication `getApplication` # PARALLEL
 
 #------------------------------------------------------------------------------

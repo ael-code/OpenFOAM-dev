@@ -41,12 +41,12 @@ isTest()
 
 getNumberOfProcessors()
 {
-    foamDictionary -disableFunctionEntries -entry numberOfSubdomains -value system/decomposeParDict
+    foamDictionary -case ${FOAM_CASE:?} -disableFunctionEntries -entry numberOfSubdomains -value system/decomposeParDict
 }
 
 getApplication()
 {
-    foamDictionary -disableFunctionEntries -entry application -value system/controlDict
+    foamDictionary -case ${FOAM_CASE:?} -disableFunctionEntries -entry application -value system/controlDict
 }
 
 runApplication()
@@ -80,17 +80,17 @@ runApplication()
 
         shift
     done
-
-    if [ -f log.$LOG_SUFFIX ] && [ "$LOG_IGNORE" = "false" ]
+    LOG=${FOAM_LOGS:?}/log.${LOG_SUFFIX}
+    if [ -f ${LOG} ] && [ "$LOG_IGNORE" = "false" ]
     then
-        echo "$APP_NAME already run on $PWD:" \
-             "remove log file 'log.$LOG_SUFFIX' to re-run"
+        echo "Log for $APP_NAME already exists:" \
+             "remove log file '${LOG}' to re-run"
     else
-        echo "Running $APP_RUN on $PWD"
+        echo "Running $APP_RUN on ${FOAM_CASE:?}"
         if [ "$LOG_APPEND" = "true" ]; then
-            $APP_RUN "$@" >> log.$LOG_SUFFIX 2>&1
+            $APP_RUN -case ${FOAM_CASE:?} "$@" >> $LOG 2>&1
         else
-            $APP_RUN "$@" > log.$LOG_SUFFIX 2>&1
+            $APP_RUN -case ${FOAM_CASE:?} "$@" > $LOG 2>&1
         fi
     fi
 }
@@ -131,17 +131,19 @@ runParallel()
 
         shift
     done
-
-    if [ -f log.$LOG_SUFFIX ] && [ "$LOG_IGNORE" = "false" ]
+    
+    LOG=${FOAM_LOGS:?}/log.${LOG_SUFFIX}
+    
+    if [ -f ${LOG} ] && [ "$LOG_IGNORE" = "false" ]
     then
-        echo "$APP_NAME already run on $PWD:" \
-             "remove log file 'log.$LOG_SUFFIX' to re-run"
+        echo "Log for $APP_NAME already exists:" \
+             "remove log file ${LOG} to re-run"
     else
-        echo "Running $APP_RUN in parallel on $PWD using $nProcs processes"
+        echo "Running $APP_RUN in parallel on ${FOAM_CASE:?} using $nProcs processes"
         if [ "$LOG_APPEND" = "true" ]; then
-            ( mpirun -np $nProcs $APP_RUN -parallel "$@" < /dev/null >> log.$LOG_SUFFIX 2>&1 )
+            ( mpirun -np $nProcs $APP_RUN -case ${FOAM_CASE:?} -parallel "$@" < /dev/null >> ${LOG} 2>&1 )
         else
-            ( mpirun -np $nProcs $APP_RUN -parallel "$@" < /dev/null > log.$LOG_SUFFIX 2>&1 )
+            ( mpirun -np $nProcs $APP_RUN -case ${FOAM_CASE:?} -parallel "$@" < /dev/null > ${LOG} 2>&1 )
         fi
     fi
 }

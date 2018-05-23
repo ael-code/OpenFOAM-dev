@@ -62,7 +62,7 @@ castellatedMeshControls
     // Note that this is the number of cells before removing the part which
     // is not 'visible' from the keepPoint. The final number of cells might
     // actually be a lot less.
-    maxGlobalCells 7000000;
+    maxGlobalCells 100;
 
     // The surface refinement loop might spend lots of iterations refining just a
     // few cells. This setting will cause refinement to stop if <= minimumRefine
@@ -80,7 +80,7 @@ castellatedMeshControls
     // Number of buffer layers between different levels.
     // 1 means normal 2:1 refinement restriction, larger means slower
     // refinement.
-    nCellsBetweenLevels 3;
+    nCellsBetweenLevels 1;
 
 
 
@@ -113,7 +113,7 @@ castellatedMeshControls
         motorBike
         {
             // Surface-wise min and max refinement level
-            level (6 8);
+            level (1 2);
         }
     }
 
